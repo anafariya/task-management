@@ -42,8 +42,14 @@ export const formatTime = (time: string): string => {
   return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
 };
 
-// Generate a random color for tasks
 export const getRandomColor = (): string => {
-  const colors = ['#3f51b5', '#4caf50', '#f44336']; // Blue, Green, Red
-  return colors[Math.floor(Math.random() * colors.length)];
-};
+    const gradients = [
+      'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)',   // Purple to Blue
+      'linear-gradient(135deg, #43cea2 0%, #185a9d 100%)',   // Green to Teal
+      'linear-gradient(135deg, #ff8008 0%, #ffc837 100%)',   // Orange to Yellow
+      'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)',   // Pink to Red
+      'linear-gradient(135deg, #16a085 0%, #2980b9 100%)',   // Teal to Blue
+      'linear-gradient(135deg, #4568dc 0%, #b06ab3 100%)',   // Blue to Purple
+    ];
+    return gradients[Math.floor(Math.random() * gradients.length)];
+  };

@@ -35,23 +35,23 @@ export const taskSlice = createSlice({
   initialState,
   reducers: {
     addTask: (state, action: PayloadAction<Task>) => {
-      const newTask = {
-        ...action.payload,
-        color: getRandomColor(), // Assign a random color
-      };
-      
-      // Check for time conflicts
-      const conflict = state.tasks.find(task => checkTimeConflict(task, newTask));
-      
-      if (conflict) {
-        state.error = 'Time slot overlaps with another task';
-        return;
-      }
-      
-      state.tasks.push(newTask);
-      state.error = null;
-      saveTasksToStorage(state.tasks);
-    },
+        const newTask = {
+          ...action.payload,
+          color: getRandomColor(), 
+        };
+        
+        // Check for time conflicts
+        const conflict = state.tasks.find(task => checkTimeConflict(task, newTask));
+        
+        if (conflict) {
+          state.error = 'Time slot overlaps with another task';
+          return;
+        }
+        
+        state.tasks.push(newTask);
+        state.error = null;
+        saveTasksToStorage(state.tasks);
+      },
     editTask: (state, action: PayloadAction<Task>) => {
       const updatedTask = action.payload;
       
@@ -83,8 +83,11 @@ export const taskSlice = createSlice({
       saveTasksToStorage(state.tasks);
     },
     clearError: (state) => {
-      state.error = null;
-    },
+        state.error = null;
+      },
+      setError: (state, action: PayloadAction<string>) => {
+        state.error = action.payload;
+      },
     initializeFromStorage: (state) => {
       state.tasks = loadTasksFromStorage();
     }
@@ -96,6 +99,7 @@ export const {
   editTask, 
   deleteTask, 
   clearError,
+  setError,
   initializeFromStorage
 } = taskSlice.actions;
 
