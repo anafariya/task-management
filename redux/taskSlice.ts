@@ -1,33 +1,43 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Task } from '../types';
-import { checkTimeConflict, getRandomColor } from '../utils/timeUtils';
+import { Task, Category, DEFAULT_CATEGORIES } from '../types';
+import { checkTimeConflict, getTodayDateString } from '../utils/timeUtils';
 
 interface TaskState {
   tasks: Task[];
+  categories: Category[];
+  selectedDate: string;
   error: string | null;
+  isLoading: boolean;
 }
 
-// Load tasks from localStorage
-const loadTasksFromStorage = (): Task[] => {
+// Load data from localStorage
+const loadFromStorage = <T>(key: string, defaultValue: T): T => {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('tasks');
+    const saved = localStorage.getItem(key);
     if (saved) {
-      return JSON.parse(saved);
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error(`Error parsing ${key} from localStorage:`, e);
+      }
     }
   }
-  return [];
+  return defaultValue;
 };
 
-// Save tasks to localStorage
-const saveTasksToStorage = (tasks: Task[]) => {
+// Save data to localStorage
+const saveToStorage = <T>(key: string, data: T) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
+    localStorage.setItem(key, JSON.stringify(data));
   }
 };
 
 const initialState: TaskState = {
   tasks: [],
+  categories: DEFAULT_CATEGORIES,
+  selectedDate: getTodayDateString(),
   error: null,
+  isLoading: true,
 };
 
 export const taskSlice = createSlice({
@@ -35,23 +45,25 @@ export const taskSlice = createSlice({
   initialState,
   reducers: {
     addTask: (state, action: PayloadAction<Task>) => {
-        const newTask = {
-          ...action.payload,
-          color: getRandomColor(), 
-        };
-        
-        // Check for time conflicts
-        const conflict = state.tasks.find(task => checkTimeConflict(task, newTask));
-        
-        if (conflict) {
-          state.error = 'Time slot overlaps with another task';
-          return;
-        }
-        
-        state.tasks.push(newTask);
-        state.error = null;
-        saveTasksToStorage(state.tasks);
-      },
+      // If task doesn't have a date, set it to selectedDate
+      const newTask = { 
+        ...action.payload,
+        date: action.payload.date || state.selectedDate
+      };
+
+      // Check for time conflicts
+      const conflict = state.tasks.find(task => checkTimeConflict(task, newTask));
+      
+      if (conflict) {
+        state.error = `Time slot overlaps with "${conflict.title}"`;
+        return;
+      }
+      
+      state.tasks.push(newTask);
+      state.error = null;
+      saveToStorage('tasks', state.tasks);
+    },
+    
     editTask: (state, action: PayloadAction<Task>) => {
       const updatedTask = action.payload;
       
@@ -62,42 +74,80 @@ export const taskSlice = createSlice({
       const conflict = otherTasks.find(task => checkTimeConflict(task, updatedTask));
       
       if (conflict) {
-        state.error = 'Time slot overlaps with another task';
+        state.error = `Time slot overlaps with "${conflict.title}"`;
         return;
       }
       
       const index = state.tasks.findIndex(task => task.id === updatedTask.id);
       if (index !== -1) {
-        // Preserve the color when editing
-        state.tasks[index] = {
-          ...updatedTask,
-          color: state.tasks[index].color
-        };
+        state.tasks[index] = updatedTask;
         state.error = null;
-        saveTasksToStorage(state.tasks);
+        saveToStorage('tasks', state.tasks);
       }
     },
+    
     deleteTask: (state, action: PayloadAction<string>) => {
       state.tasks = state.tasks.filter(task => task.id !== action.payload);
       state.error = null;
-      saveTasksToStorage(state.tasks);
+      saveToStorage('tasks', state.tasks);
     },
+    
+    toggleTaskCompletion: (state, action: PayloadAction<string>) => {
+      const index = state.tasks.findIndex(task => task.id === action.payload);
+      if (index !== -1) {
+        state.tasks[index].completed = !state.tasks[index].completed;
+        saveToStorage('tasks', state.tasks);
+      }
+    },
+    
+    addCategory: (state, action: PayloadAction<Category>) => {
+      state.categories.push(action.payload);
+      saveToStorage('categories', state.categories);
+    },
+    
+    editCategory: (state, action: PayloadAction<Category>) => {
+      const index = state.categories.findIndex(cat => cat.id === action.payload.id);
+      if (index !== -1) {
+        state.categories[index] = action.payload;
+        saveToStorage('categories', state.categories);
+      }
+    },
+    
+    deleteCategory: (state, action: PayloadAction<string>) => {
+      state.categories = state.categories.filter(cat => cat.id !== action.payload);
+      saveToStorage('categories', state.categories);
+    },
+    
+    setSelectedDate: (state, action: PayloadAction<string>) => {
+      state.selectedDate = action.payload;
+    },
+    
     clearError: (state) => {
-        state.error = null;
-      },
-      setError: (state, action: PayloadAction<string>) => {
-        state.error = action.payload;
-      },
+      state.error = null;
+    },
+    
+    setError: (state, action: PayloadAction<string>) => {
+      state.error = action.payload;
+    },
+    
     initializeFromStorage: (state) => {
-      state.tasks = loadTasksFromStorage();
+      state.isLoading = true;
+      state.tasks = loadFromStorage('tasks', []);
+      state.categories = loadFromStorage('categories', DEFAULT_CATEGORIES);
+      state.isLoading = false;
     }
   },
 });
 
-export const { 
-  addTask, 
-  editTask, 
-  deleteTask, 
+export const {
+  addTask,
+  editTask,
+  deleteTask,
+  toggleTaskCompletion,
+  addCategory,
+  editCategory,
+  deleteCategory,
+  setSelectedDate,
   clearError,
   setError,
   initializeFromStorage
