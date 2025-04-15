@@ -32,6 +32,7 @@ import { useDispatch, useSelector } from '../redux/hooks';
 import { addTask, editTask, clearError, setError } from '../redux/taskSlice';
 import { v4 as uuidv4 } from 'uuid';
 import { formatDuration, calculateDuration } from '../utils/timeUtils';
+import CustomTimePicker from './TimePicker';
 
 interface AddTaskDialogProps {
   open: boolean;
@@ -341,55 +342,31 @@ const AddTaskDialog = ({ open, onClose, task }: AddTaskDialogProps) => {
           </Box>
 
           <Box sx={{ display: 'flex', gap: 2, mb: 2.5 }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle2" component="div" sx={{ mb: 1, fontWeight: 500 }}>
-                Start Time
-              </Typography>
-              <TimePicker
-                value={startTime}
-                onChange={(newValue) => setStartTime(newValue)}
-                sx={{ 
-                  width: '100%',
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '8px',
-                  }
-                }}
-                slotProps={{
-                  textField: {
-                    variant: 'outlined',
-                    error: formSubmitted && !startTime,
-                    helperText:
-                      formSubmitted && !startTime ? 'Start time is required' : '',
-                  },
-                }}
-              />
-            </Box>
+          <Box sx={{ flex: 1 }}>
+  <Typography variant="subtitle2" component="div" sx={{ mb: 1, fontWeight: 500 }}>
+    Start Time
+  </Typography>
+  <CustomTimePicker
+    value={startTime}
+    onChange={(newValue) => setStartTime(newValue)}
+    error={formSubmitted && !startTime}
+    helperText={formSubmitted && !startTime ? 'Start time is required' : ''}
+    variant="outlined"
+  />
+</Box>
 
             <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle2" component="div" sx={{ mb: 1, fontWeight: 500 }}>
-                End Time
-              </Typography>
-              <TimePicker
-                value={endTime}
-                onChange={(newValue) => setEndTime(newValue)}
-                sx={{ 
-                  width: '100%',
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '8px',
-                  }
-                }}
-                slotProps={{
-                  textField: {
-                    variant: 'outlined',
-                    error: formSubmitted && !endTime,
-                    helperText:
-                      formSubmitted && !endTime
-                        ? 'End time is required'
-                        : '',
-                  },
-                }}
-              />
-            </Box>
+  <Typography variant="subtitle2" component="div" sx={{ mb: 1, fontWeight: 500 }}>
+    End Time
+  </Typography>
+  <CustomTimePicker
+    value={endTime}
+    onChange={(newValue) => setEndTime(newValue)}
+    error={formSubmitted && !endTime}
+    helperText={formSubmitted && !endTime ? 'End time is required' : ''}
+    variant="outlined"
+  />
+</Box>
           </Box>
         </LocalizationProvider>
 
